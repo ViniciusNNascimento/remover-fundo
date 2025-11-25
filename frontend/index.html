@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Removedor de Fundo (AI)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 40px auto;
+            text-align: center;
+        }
+
+        input {
+            margin-top: 15px;
+        }
+
+        #preview, #result {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Removedor de Fundo (AI)</h1>
+
+    <input type="file" id="fileInput" accept="image/*"><br><br>
+
+    <img id="preview" style="display:none;" />
+    <img id="result" style="display:none;" />
+
+    <script>
+        const input = document.getElementById("fileInput");
+        const preview = document.getElementById("preview");
+        const result = document.getElementById("result");
+
+        input.addEventListener("change", async () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Preview da imagem original
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+
+            // Enviar para API
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("http://localhost:8000/remove-background", {
+                method: "POST",
+                body: formData
+            });
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            result.src = url;
+            result.style.display = "block";
+        });
+    </script>
+</body>
+</html>
