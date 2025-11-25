@@ -121,21 +121,6 @@ O projeto inclui uma interface simples com:
 
 ---
 
-## 📦 Deploy (opcional)
-
-### Backend (FastAPI)
-- Railway (grátis)
-- Render
-- Deta Space
-- HuggingFace Spaces
-
-### Frontend
-- Vercel
-- Netlify
-- GitHub Pages
-
----
-
 ## 📌 Melhorias futuras
 
 - Interface mais bonita (Tailwind)
