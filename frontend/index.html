@@ -1,62 +1,400 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <title>Removedor de Fundo (AI)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            color-scheme: dark;
+            --bg: #07090f;
+            --surface: #111626;
+            --surface-alt: #1b2237;
+            --text: #f5f7ff;
+            --muted: #9aa2c7;
+            --primary: #7c3aed;
+            --primary-light: rgba(124, 58, 237, 0.15);
+            --accent: linear-gradient(135deg, #7c3aed, #4c1d95);
+            --border: rgba(255,255,255,0.08);
+            --success: #22d3ee;
+            --danger: #fb7185;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 40px auto;
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at top, rgba(124,58,237,0.25), transparent 45%), var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px 64px;
+        }
+
+        .glass-panel {
+            width: min(960px, 100%);
+            background: rgba(17, 22, 38, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            display: grid;
+            gap: 40px;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.6rem, 2vw, 2.2rem);
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .card {
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 32px;
             text-align: center;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
         }
 
-        input {
-            margin-top: 15px;
+        .upload-zone:hover,
+        .upload-zone.is-dragover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
 
-        #preview, #result {
-            margin-top: 20px;
+        .upload-zone input {
+            display: none;
+        }
+
+        .upload-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: var(--text);
+            box-shadow: 0 10px 30px rgba(124,58,237,0.35);
+        }
+
+        button.secondary {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button:not(:disabled):hover {
+            transform: translateY(-2px);
+        }
+
+        .preview-wrapper {
+            display: grid;
+            gap: 20px;
+        }
+
+        .img-frame {
+            position: relative;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--surface-alt);
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .img-frame img {
             max-width: 100%;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--muted);
+        }
+
+        .status-dot.is-active {
+            background: var(--success);
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
+        }
+
+        .helper {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+
+        .helper span {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+        }
+
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <h1>Removedor de Fundo (AI)</h1>
+    <main class="glass-panel">
+        <header>
+            <div>
+                <h1>Removedor de Fundo com IA</h1>
+                <p>Transforme suas imagens em segundos com um fluxo simples, responsivo e totalmente em dark mode.</p>
+            </div>
+            <div class="chip">Modo Escuro</div>
+        </header>
 
-    <input type="file" id="fileInput" accept="image/*"><br><br>
+        <section class="grid">
+            <article class="card">
+                <div class="upload-zone" id="uploadZone">
+                    <p><strong>Arraste sua imagem</strong> ou clique para selecionar um arquivo.</p>
+                    <p class="helper">
+                        <span>PNG</span>
+                        <span>JPG</span>
+                        <span>Até 10MB</span>
+                    </p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                <div class="upload-actions">
+                    <button class="primary" id="processBtn" disabled>Processar com IA</button>
+                    <button class="secondary" id="resetBtn" disabled>Limpar</button>
+                </div>
+                <div class="status" id="status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusLabel">Selecione uma imagem para começar</span>
+                </div>
+            </article>
 
-    <img id="preview" style="display:none;" />
-    <img id="result" style="display:none;" />
+            <article class="card preview-wrapper">
+                <div>
+                    <h2>Pré-visualização</h2>
+                    <p>Veja a imagem original e o resultado lado a lado.</p>
+                </div>
+                <div class="img-frame">
+                    <img id="preview" class="hidden" alt="Pré-visualização da imagem original">
+                    <span id="previewPlaceholder" class="muted">Nenhuma imagem selecionada</span>
+                </div>
+                <div class="img-frame">
+                    <img id="result" class="hidden" alt="Resultado com fundo removido">
+                    <span id="resultPlaceholder" class="muted">Resultado aparecerá aqui</span>
+                </div>
+                <button class="primary hidden" id="downloadBtn">Baixar PNG</button>
+            </article>
+        </section>
+    </main>
 
     <script>
-        const input = document.getElementById("fileInput");
+        const fileInput = document.getElementById("fileInput");
+        const uploadZone = document.getElementById("uploadZone");
+        const processBtn = document.getElementById("processBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
         const preview = document.getElementById("preview");
         const result = document.getElementById("result");
+        const statusDot = document.getElementById("statusDot");
+        const statusLabel = document.getElementById("statusLabel");
+        const previewPlaceholder = document.getElementById("previewPlaceholder");
+        const resultPlaceholder = document.getElementById("resultPlaceholder");
 
-        input.addEventListener("change", async () => {
-            const file = input.files[0];
-            if (!file) return;
+        let processedURL = null;
+        let currentFile = null;
 
-            // Preview da imagem original
+        const setStatus = (message, isActive = false, isError = false) => {
+            statusLabel.textContent = message;
+            statusDot.classList.toggle("is-active", isActive);
+            statusDot.style.background = isError ? "var(--danger)" : (isActive ? "var(--success)" : "var(--muted)");
+            statusDot.style.boxShadow = isActive ? "0 0 12px rgba(34, 211, 238, 0.6)" : "none";
+        };
+
+        const resetUI = () => {
+            currentFile = null;
+            processedURL && URL.revokeObjectURL(processedURL);
+            processedURL = null;
+
+            fileInput.value = "";
+            preview.src = "";
+            result.src = "";
+            preview.classList.add("hidden");
+            result.classList.add("hidden");
+            previewPlaceholder.classList.remove("hidden");
+            resultPlaceholder.classList.remove("hidden");
+
+            processBtn.disabled = true;
+            resetBtn.disabled = true;
+            downloadBtn.classList.add("hidden");
+            downloadBtn.removeAttribute("href");
+
+            setStatus("Selecione uma imagem para começar");
+        };
+
+        const handleFile = (file) => {
+            if (!file || !file.type.startsWith("image/")) {
+                setStatus("Escolha um arquivo de imagem válido.", false, true);
+                return;
+            }
+
+            currentFile = file;
             preview.src = URL.createObjectURL(file);
-            preview.style.display = "block";
+            preview.classList.remove("hidden");
+            previewPlaceholder.classList.add("hidden");
+            processBtn.disabled = false;
+            resetBtn.disabled = false;
+            downloadBtn.classList.add("hidden");
+            result.classList.add("hidden");
+            resultPlaceholder.classList.remove("hidden");
+            setStatus("Pronto para processar", true);
+        };
 
-            // Enviar para API
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const response = await fetch("http://localhost:8000/remove-background", {
-                method: "POST",
-                body: formData
-            });
-
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-
-            result.src = url;
-            result.style.display = "block";
+        uploadZone.addEventListener("click", () => fileInput.click());
+        uploadZone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            uploadZone.classList.add("is-dragover");
         });
+        uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("is-dragover"));
+        uploadZone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            uploadZone.classList.remove("is-dragover");
+            const file = event.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            handleFile(file);
+        });
+
+        processBtn.addEventListener("click", async () => {
+            if (!currentFile) {
+                return;
+            }
+
+            processBtn.disabled = true;
+            setStatus("Processando imagem com IA...", true);
+
+            const formData = new FormData();
+            formData.append("file", currentFile);
+
+            try {
+                const response = await fetch("http://localhost:8000/remove-background", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erro ao processar imagem");
+                }
+
+                const blob = await response.blob();
+                processedURL && URL.revokeObjectURL(processedURL);
+                processedURL = URL.createObjectURL(blob);
+
+                result.src = processedURL;
+                result.classList.remove("hidden");
+                resultPlaceholder.classList.add("hidden");
+                downloadBtn.classList.remove("hidden");
+                downloadBtn.href = processedURL;
+                downloadBtn.download = `removed-bg-${Date.now()}.png`;
+                downloadBtn.textContent = "Baixar PNG";
+
+                setStatus("Processamento concluído!", true);
+            } catch (error) {
+                console.error(error);
+                setStatus("Não foi possível processar. Tente novamente.", false, true);
+            } finally {
+                processBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener("click", resetUI);
+        downloadBtn.addEventListener("click", () => {
+            if (!processedURL) {
+                downloadBtn.classList.add("hidden");
+            }
+        });
+
+        resetUI();
     </script>
 </body>
 </html>
